@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "stm32f4xx_hal_def.h": "c",
+        "stm32f4xx_hal_i2c.h": "c",
+        "pca9685.h": "c",
+        "cmsis_os.h": "c"
+    }
+}

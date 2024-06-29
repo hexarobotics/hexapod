@@ -22,8 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "lib/pca9685/pca9685.h"
-
+#include "pca9685.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,6 +32,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define PCA9685_DEFAULT_ID      0x40
+#define CHANNEL_0               0
+#define FREQUENCY               50    // Frecuencia PWM de 50Hz o T=20ms
+#define SERVO_MIN_TICKS         102 // ancho de pulso en ticks para pocicion 0°
+#define SERVO_MAX_TICKS         512 // ancho de pulso en ticks para la pocicion 180°
 
 /* USER CODE END PD */
 
@@ -55,9 +59,9 @@ const osThreadAttr_t defaultTask_attributes = {
 };
 /* USER CODE BEGIN PV */
 
-pca9685_handle_t handle = {
+pca9685_handle_t handle_pca9685 = {
     .i2c_handle = &hi2c1,
-    .device_address = PCA9865_I2C_DEFAULT_DEVICE_ADDRESS,
+    .device_address = PCA9685_DEFAULT_ID,
     .inverted = false
 };
 
@@ -111,6 +115,10 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+
+  pca9685_init(&handle_pca9685);
+  pca9685_set_pwm_frequency(&handle_pca9685, 50.0f);
+
 
   /* USER CODE END 2 */
 
@@ -325,11 +333,26 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
+    /* USER CODE BEGIN 5 */
+    /* Infinite loop */
+    for(;;)
+    {
+        for (uint16_t on_ticks = SERVO_MIN_TICKS; on_ticks < SERVO_MAX_TICKS; on_ticks++)
+        {
+            pca9685_set_channel_pwm_times( &handle_pca9685, CHANNEL_0, on_ticks, 0);
+
+            //servoController.setPWM(n, 0, duty);
+            osDelay(10);
+        }
+        osDelay(1000);
+
+        for (uint16_t on_ticks = SERVO_MAX_TICKS; on_ticks > SERVO_MIN_TICKS; on_ticks++)
+        {
+            pca9685_set_channel_pwm_times( &handle_pca9685, CHANNEL_0, on_ticks, 0);
+            //servoController.setPWM(n, 0, duty);
+            osDelay(10);
+        }
+        osDelay(1000);
   }
   /* USER CODE END 5 */
 }
