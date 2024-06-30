@@ -59,6 +59,8 @@ static bool pca9685_write_u8(pca9685_handle_t *handle, uint8_t address, uint8_t 
 
 static bool pca9685_write_data(pca9685_handle_t *handle, uint8_t address, uint8_t *data, size_t length)
 {
+	HAL_StatusTypeDef status;
+
     if (length == 0 || length > 4) {
         return false;
     }
@@ -68,7 +70,9 @@ static bool pca9685_write_data(pca9685_handle_t *handle, uint8_t address, uint8_
 
     memcpy(&transfer[1], data, length);
 
-    return HAL_I2C_Master_Transmit(handle->i2c_handle, handle->device_address, transfer, length + 1, PCA9685_I2C_TIMEOUT) == HAL_OK;
+	status = HAL_I2C_Master_Transmit(handle->i2c_handle, handle->device_address, transfer, length + 1, PCA9685_I2C_TIMEOUT);
+
+	return (status == HAL_OK);
 }
 
 static bool pca9685_read_u8(pca9685_handle_t *handle, uint8_t address, uint8_t *dest)
