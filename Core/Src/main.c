@@ -22,6 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdio.h"
+#include "stdbool.h"
 #include "pca9685.h"
 /* USER CODE END Includes */
 
@@ -32,9 +34,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define PCA9685_DEFAULT_ID      0x40
-#define CHANNEL_0               0
-#define FREQUENCY               50    // Frecuencia PWM de 50Hz o T=20ms
+#define PCA9685_DEFAULT_ID      0x44
+#define CHANNEL_0               15
 #define SERVO_MIN_TICKS         102 // ancho de pulso en ticks para pocicion 0°
 #define SERVO_MAX_TICKS         512 // ancho de pulso en ticks para la pocicion 180°
 
@@ -58,13 +59,13 @@ const osThreadAttr_t defaultTask_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
-
+/*
 pca9685_handle_t handle_pca9685 = {
     .i2c_handle = &hi2c1,
     .device_address = PCA9685_DEFAULT_ID,
     .inverted = false
 };
-
+*/
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -80,7 +81,14 @@ void StartDefaultTask(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+int _write(int file, char *ptr, int len)
+{
+  /* Implement your write code here, this is used by puts and printf for example */
+  int i=0;
+  for(i=0 ; i<len ; i++)
+    ITM_SendChar((*ptr++));
+  return len;
+}
 /* USER CODE END 0 */
 
 /**
@@ -116,8 +124,12 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
-  pca9685_init(&handle_pca9685);
-  pca9685_set_pwm_frequency(&handle_pca9685, 50.0f);
+  //bool ret_init = pca9685_init(&handle_pca9685);
+  //bool ret_set_freq = pca9685_set_pwm_frequency(&handle_pca9685, 50.0f);
+  if ( PCA9685_ERROR == PCA9685_Init( &hi2c1 ) )
+  {
+    //  show_error
+  }
 
 
   /* USER CODE END 2 */
@@ -333,24 +345,57 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
-    /* USER CODE BEGIN 5 */
+  /* USER CODE BEGIN 5 */
     /* Infinite loop */
     for(;;)
     {
-        for (uint16_t on_ticks = SERVO_MIN_TICKS; on_ticks < SERVO_MAX_TICKS; on_ticks++)
-        {
-            pca9685_set_channel_pwm_times( &handle_pca9685, CHANNEL_0, on_ticks, 0);
+        static int16_t mal = 0;
+        static int16_t bien = 0;
 
-            //servoController.setPWM(n, 0, duty);
-            osDelay(10);
+
+    	for ( uint16_t channel = 14; channel < 16; channel++ )
+    	{
+			for (uint16_t on_ticks = SERVO_MIN_TICKS; on_ticks < SERVO_MAX_TICKS; on_ticks+=20)
+			{
+                //bool ret = pca9685_set_channel_pwm_times( &handle_pca9685, channel, on_ticks,0 );
+                PCA9685_STATUS ret = PCA9685_SetServoAngle( channel, on_ticks );
+
+                if ( ret == PCA9685_ERROR )
+                {
+                  mal++;
+                }
+                else
+                {
+                	bien++;
+                }
+
+                printf("Bien...: %d, Mal...: %d \n",bien,mal);
+
+                osDelay(100);
+        	}
         }
         osDelay(1000);
 
-        for (uint16_t on_ticks = SERVO_MAX_TICKS; on_ticks > SERVO_MIN_TICKS; on_ticks++)
-        {
-            pca9685_set_channel_pwm_times( &handle_pca9685, CHANNEL_0, on_ticks, 0);
-            //servoController.setPWM(n, 0, duty);
-            osDelay(10);
+    	for ( uint16_t channel = 14; channel < 16; channel++ )
+    	{
+			for (uint16_t on_ticks = SERVO_MAX_TICKS; on_ticks > SERVO_MIN_TICKS; on_ticks-=20)
+			{
+                PCA9685_STATUS ret = PCA9685_SetServoAngle( channel, on_ticks );
+
+                if ( ret == PCA9685_ERROR )
+                {
+                  mal++;
+                }
+                else
+                {
+                	bien++;
+                }
+
+                printf("Bien...: %d, Mal...: %d \n",bien,mal);
+
+                osDelay(100);
+        	}
+
         }
         osDelay(1000);
   }
