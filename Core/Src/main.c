@@ -22,6 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdio.h"
 #include "stdbool.h"
 #include "pca9685.h"
 /* USER CODE END Includes */
@@ -80,7 +81,14 @@ void StartDefaultTask(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+int _write(int file, char *ptr, int len)
+{
+  /* Implement your write code here, this is used by puts and printf for example */
+  int i=0;
+  for(i=0 ; i<len ; i++)
+    ITM_SendChar((*ptr++));
+  return len;
+}
 /* USER CODE END 0 */
 
 /**
@@ -341,47 +349,53 @@ void StartDefaultTask(void *argument)
     /* Infinite loop */
     for(;;)
     {
-    	for ( uint16_t channel = 0; channel < 2; channel++ )
+        static int16_t mal = 0;
+        static int16_t bien = 0;
+
+
+    	for ( uint16_t channel = 14; channel < 16; channel++ )
     	{
 			for (uint16_t on_ticks = SERVO_MIN_TICKS; on_ticks < SERVO_MAX_TICKS; on_ticks+=20)
 			{
                 //bool ret = pca9685_set_channel_pwm_times( &handle_pca9685, channel, on_ticks,0 );
                 PCA9685_STATUS ret = PCA9685_SetServoAngle( channel, on_ticks );
 
-                static int16_t do_noting = 0;
                 if ( ret == PCA9685_ERROR )
                 {
-                  do_noting++;
+                  mal++;
                 }
                 else
                 {
-                	do_noting--;
+                	bien++;
                 }
-                //servoController.setPWM(n, 0, duty);
+
+                printf("Bien...: %d, Mal...: %d \n",bien,mal);
+
                 osDelay(100);
         	}
         }
         osDelay(1000);
 
-    	for ( uint16_t channel = 0; channel < 2; channel++ )
+    	for ( uint16_t channel = 14; channel < 16; channel++ )
     	{
 			for (uint16_t on_ticks = SERVO_MAX_TICKS; on_ticks > SERVO_MIN_TICKS; on_ticks-=20)
 			{
                 PCA9685_STATUS ret = PCA9685_SetServoAngle( channel, on_ticks );
 
-                static int16_t do_noting = 0;
-
                 if ( ret == PCA9685_ERROR )
                 {
-                  do_noting++;
+                  mal++;
                 }
                 else
                 {
-                	do_noting--;
+                	bien++;
                 }
-                //servoController.setPWM(n, 0, duty);
+
+                printf("Bien...: %d, Mal...: %d \n",bien,mal);
+
                 osDelay(100);
         	}
+
         }
         osDelay(1000);
   }
