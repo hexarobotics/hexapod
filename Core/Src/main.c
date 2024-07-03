@@ -32,11 +32,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define PCA9685_DEFAULT_ID      0x40
-#define CHANNEL_0               0
+#define PCA9685_DEFAULT_ID      0x44
+#define CHANNEL_0               15
 #define FREQUENCY               50    // Frecuencia PWM de 50Hz o T=20ms
 #define SERVO_MIN_TICKS         102 // ancho de pulso en ticks para pocicion 0°
-#define SERVO_MAX_TICKS         512 // ancho de pulso en ticks para la pocicion 180°
+#define SERVO_MAX_TICKS         1512 // ancho de pulso en ticks para la pocicion 180°
 
 /* USER CODE END PD */
 
@@ -116,9 +116,8 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
-  pca9685_init(&handle_pca9685);
-  pca9685_set_pwm_frequency(&handle_pca9685, 50.0f);
-
+  bool ret_init = pca9685_init(&handle_pca9685);
+  bool ret_set_freq = pca9685_set_pwm_frequency(&handle_pca9685, 50.0f);
 
   /* USER CODE END 2 */
 
@@ -333,24 +332,49 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
-    /* USER CODE BEGIN 5 */
+  /* USER CODE BEGIN 5 */
     /* Infinite loop */
     for(;;)
     {
         for (uint16_t on_ticks = SERVO_MIN_TICKS; on_ticks < SERVO_MAX_TICKS; on_ticks++)
         {
-            pca9685_set_channel_pwm_times( &handle_pca9685, CHANNEL_0, on_ticks, 0);
+        	for ( uint16_t channel = 0; channel < 16; channel++ )
+        	{
+                bool ret = pca9685_set_channel_pwm_times( &handle_pca9685, channel, on_ticks,0 );
+                static int16_t do_noting = 0;
+                if ( ret == 0 )
+                {
 
-            //servoController.setPWM(n, 0, duty);
-            osDelay(10);
+                  do_noting++;
+                }
+                else
+                {
+                	do_noting--;
+                }
+                //servoController.setPWM(n, 0, duty);
+                osDelay(10);
+        	}
         }
         osDelay(1000);
 
         for (uint16_t on_ticks = SERVO_MAX_TICKS; on_ticks > SERVO_MIN_TICKS; on_ticks++)
         {
-            pca9685_set_channel_pwm_times( &handle_pca9685, CHANNEL_0, on_ticks, 0);
-            //servoController.setPWM(n, 0, duty);
-            osDelay(10);
+        	for ( uint16_t channel = 0; channel < 16; channel++ )
+        	{
+                bool ret = pca9685_set_channel_pwm_times( &handle_pca9685, channel, on_ticks,0 );
+                static int16_t do_noting = 0;
+
+                if ( ret == 0 )
+                {
+                  do_noting++;
+                }
+                else
+                {
+                	do_noting--;
+                }
+                //servoController.setPWM(n, 0, duty);
+                osDelay(10);
+        	}
         }
         osDelay(1000);
   }
