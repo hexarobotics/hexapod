@@ -26,6 +26,7 @@ PCA9685_STATUS PCA9685_SetBit(uint8_t Register, uint8_t Bit, uint8_t Value)
 	{
 		return PCA9685_ERROR;
 	}
+
 	tmp &= ~((1<<PCA9685_MODE1_RESTART_BIT)|(1<<Bit));
 	tmp |= (Value&1)<<Bit;
 
@@ -236,7 +237,7 @@ PCA9685_STATUS PCA9685_Init(I2C_HandleTypeDef *hi2c)
 		return PCA9685_ERROR;
 	}
 
-	return PCA9685_OK;//PCA9685_AutoIncrement(1);
+	return PCA9685_OK;
 }
 
  /**
