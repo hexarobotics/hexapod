@@ -22,6 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdbool.h"
 #include "pca9685.h"
 /* USER CODE END Includes */
 
@@ -58,13 +59,13 @@ const osThreadAttr_t defaultTask_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
-
+/*
 pca9685_handle_t handle_pca9685 = {
     .i2c_handle = &hi2c1,
     .device_address = PCA9685_DEFAULT_ID,
     .inverted = false
 };
-
+*/
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -116,8 +117,8 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
-  bool ret_init = pca9685_init(&handle_pca9685);
-  bool ret_set_freq = pca9685_set_pwm_frequency(&handle_pca9685, 50.0f);
+  //bool ret_init = pca9685_init(&handle_pca9685);
+  //bool ret_set_freq = pca9685_set_pwm_frequency(&handle_pca9685, 50.0f);
 
   /* USER CODE END 2 */
 
@@ -340,7 +341,8 @@ void StartDefaultTask(void *argument)
         {
         	for ( uint16_t channel = 0; channel < 16; channel++ )
         	{
-                bool ret = pca9685_set_channel_pwm_times( &handle_pca9685, channel, on_ticks,0 );
+                //bool ret = pca9685_set_channel_pwm_times( &handle_pca9685, channel, on_ticks,0 );
+                bool ret = 1;
                 static int16_t do_noting = 0;
                 if ( ret == 0 )
                 {
@@ -361,7 +363,8 @@ void StartDefaultTask(void *argument)
         {
         	for ( uint16_t channel = 0; channel < 16; channel++ )
         	{
-                bool ret = pca9685_set_channel_pwm_times( &handle_pca9685, channel, on_ticks,0 );
+                //bool ret = pca9685_set_channel_pwm_times( &handle_pca9685, channel, on_ticks,0 );
+                bool ret = 1;
                 static int16_t do_noting = 0;
 
                 if ( ret == 0 )
