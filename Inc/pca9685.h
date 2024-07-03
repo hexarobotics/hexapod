@@ -104,6 +104,6 @@ PCA9685_STATUS PCA9685_SetServoAngle(uint8_t Channel, float Angle);
 
 PCA9685_STATUS PCA9685_Init(I2C_HandleTypeDef *hi2c);
 PCA9685_STATUS PCA9685_WriteReg(uint8_t reg, uint8_t value);
-PCA9685_STATUS PCA9685_ReadRegister(uint8_t reg, uint8_t *pdata);
+PCA9685_STATUS PCA9685_ReadRegisters(uint8_t reg, uint8_t *pdata, uint8_t size_data);
 
 #endif /* PCA9685_H_ */

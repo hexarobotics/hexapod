@@ -20,9 +20,9 @@ I2C_HandleTypeDef *pca9685_i2c;
 PCA9685_STATUS PCA9685_SetBit(uint8_t Register, uint8_t Bit, uint8_t Value)
 {
 	uint8_t tmp;
-	if(Value) Value = 1;
+	if(Value) Value = 1; 
 
-	if( HAL_OK != HAL_I2C_Mem_Read(pca9685_i2c, PCA9685_I2C_READ_ADDR, Register, 1, &tmp, 1, PCA9685_I2C_TIMEOUT ) )
+	if( PCA9685_OK != PCA9685_ReadRegisters( Register, &tmp, 1) )
 	{
 		return PCA9685_ERROR;
 	}
@@ -109,7 +109,7 @@ PCA9685_STATUS PCA9685_SetPwmFrequency(uint16_t Frequency)
 
 	uint8_t old_mode;
 
-	if( PCA9685_OK != PCA9685_ReadRegister( PCA9685_MODE1, &old_mode ) ) // 1 read old_mode
+	if( PCA9685_OK != PCA9685_ReadRegisters( PCA9685_MODE1, &old_mode, 1 ) ) // 1 read old_mode
 	{
 		return PCA9685_ERROR;
 	}
@@ -144,15 +144,15 @@ PCA9685_STATUS PCA9685_SetPwmFrequency(uint16_t Frequency)
 PCA9685_STATUS PCA9685_SetPwm(uint8_t Channel, uint16_t OnTime, uint16_t OffTime)
 {
 	uint8_t RegisterAddress;
-	uint8_t Message[4];
+	uint8_t data[4];
 
 	RegisterAddress = PCA9685_LED0_ON_L + (4 * Channel);
-	Message[0] = OnTime & 0xFF;
-	Message[1] = OnTime>>8;
-	Message[2] = OffTime & 0xFF;
-	Message[3] = OffTime>>8;
+	data[0] = OnTime & 0xFF;
+	data[1] = OnTime>>8;
+	data[2] = OffTime & 0xFF;
+	data[3] = OffTime>>8;
 
-	if(HAL_OK != HAL_I2C_Mem_Write(pca9685_i2c, PCA9685_I2C_WRITE_ADDR, RegisterAddress, 1, Message, 4, PCA9685_I2C_TIMEOUT ))
+	if(HAL_OK != HAL_I2C_Mem_Write(pca9685_i2c, PCA9685_I2C_WRITE_ADDR, RegisterAddress, 1, data, 4, PCA9685_I2C_TIMEOUT ))
 	{
 		return PCA9685_ERROR;
 	}
@@ -258,16 +258,12 @@ PCA9685_STATUS PCA9685_WriteReg(uint8_t reg, uint8_t value)
     return PCA9685_OK;
 }
 
-PCA9685_STATUS PCA9685_ReadRegister(uint8_t reg, uint8_t *pdata)
+PCA9685_STATUS PCA9685_ReadRegisters(uint8_t reg, uint8_t *pdata, uint8_t size_data)
 {
-    // Primero, enviamos el registro que queremos leer
-    if ( HAL_OK != HAL_I2C_Master_Transmit(pca9685_i2c, PCA9685_I2C_WRITE_ADDR , &reg, 1, PCA9685_I2C_TIMEOUT) )
+	if( HAL_OK != HAL_I2C_Mem_Read(pca9685_i2c, PCA9685_I2C_READ_ADDR, reg, 1, pdata, size_data, PCA9685_I2C_TIMEOUT ) )
     {
 		return PCA9685_ERROR;
 	}
-    
-    //return HAL_I2C_Mem_Read(pca9685_i2c, PCA9685_I2C_ADDR << 1, reg, I2C_MEMADD_SIZE_8BIT, data, 1, I2C_TIMEOUT);
 
-    // Luego, leemos el dato de ese registro
-    return HAL_I2C_Master_Receive(pca9685_i2c, PCA9685_I2C_READ_ADDR, pdata, 1, PCA9685_I2C_TIMEOUT);
+    return PCA9685_OK;
 }
