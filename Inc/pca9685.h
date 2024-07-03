@@ -24,16 +24,25 @@
 //
 //	Servo min and max values for TURINGY TG9e Servos
 //
-#define SERVO_MIN	110
-#define SERVO_MAX	500
+#define SERVO_MIN	102
+#define SERVO_MAX	512
 #define MIN_ANGLE	0.0
 #define MAX_ANGLE	180.0
+#define FREQUENCY   50    // Frecuencia PWM de 50Hz o T=20ms
+
 #endif
 
 //
 //	Adjustable address 0x80 - 0xFE
 //
-#define PCA9685_ADDRESS 0x80
+#define PCA9685_ADDRESS 0x40
+#define PCA9685_GENERAL_CALL_ADDRESS 0x00
+
+//! I2C write-to-slave address
+#define PCA9685_I2C_WRITE_ADDR                  ((PCA9685_ADDRESS << 1) | 0x01)
+
+//! I2C read-from-slave address
+#define PCA9685_I2C_READ_ADDR                   (PCA9685_ADDRESS << 1)
 
 //
 //	Registers
@@ -42,7 +51,8 @@
 #define PCA9685_SUBADR2 0x3
 #define PCA9685_SUBADR3 0x4
 
-#define PCA9685_MODE1 		0x0
+#define PCA9685_MODE1 		0x00
+#define PCA9685_MODE2 		0x01
 #define PCA9685_PRESCALE 	0xFE
 
 #define PCA9685_LED0_ON_L 	0x6
@@ -62,6 +72,7 @@ typedef enum
 	PCA9685_MODE1_SUB2_BIT	= 2,
 	PCA9685_MODE1_SUB3_BIT	= 1
 }SubaddressBit;
+
 #define PCA9685_MODE1_SLEEP_BIT		4
 #define PCA9685_MODE1_AI_BIT		5
 #define PCA9685_MODE1_EXTCLK_BIT	6
@@ -90,5 +101,6 @@ PCA9685_STATUS PCA9685_SetServoAngle(uint8_t Channel, float Angle);
 #endif
 
 PCA9685_STATUS PCA9685_Init(I2C_HandleTypeDef *hi2c);
+PCA9685_STATUS PCA9685_WriteReg(uint8_t reg, uint8_t value);
 
 #endif /* PCA9685_H_ */
