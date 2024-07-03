@@ -121,8 +121,6 @@ int main(void)
   if ( PCA9685_ERROR == PCA9685_Init( &hi2c1 ) )
   {
     //  show_error
-    uint16_t error = 0;
-    error++;
   }
 
 
