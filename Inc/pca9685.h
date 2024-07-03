@@ -44,6 +44,8 @@
 //! I2C read-from-slave address
 #define PCA9685_I2C_READ_ADDR                   (PCA9685_ADDRESS << 1)
 
+#define PCA9685_I2C_TIMEOUT						100
+
 //
 //	Registers
 //
@@ -52,7 +54,7 @@
 #define PCA9685_SUBADR3 0x4
 
 #define PCA9685_MODE1 		0x00
-#define PCA9685_MODE2 		0x01
+#define PCA9685_MODE2		0x01
 #define PCA9685_PRESCALE 	0xFE
 
 #define PCA9685_LED0_ON_L 	0x6
@@ -102,5 +104,6 @@ PCA9685_STATUS PCA9685_SetServoAngle(uint8_t Channel, float Angle);
 
 PCA9685_STATUS PCA9685_Init(I2C_HandleTypeDef *hi2c);
 PCA9685_STATUS PCA9685_WriteReg(uint8_t reg, uint8_t value);
+PCA9685_STATUS PCA9685_ReadRegister(uint8_t reg, uint8_t *pdata);
 
 #endif /* PCA9685_H_ */

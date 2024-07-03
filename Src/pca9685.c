@@ -22,14 +22,14 @@ PCA9685_STATUS PCA9685_SetBit(uint8_t Register, uint8_t Bit, uint8_t Value)
 	uint8_t tmp;
 	if(Value) Value = 1;
 
-	if( HAL_OK != HAL_I2C_Mem_Read(pca9685_i2c, PCA9685_I2C_READ_ADDR, Register, 1, &tmp, 1, HAL_MAX_DELAY ) )
+	if( HAL_OK != HAL_I2C_Mem_Read(pca9685_i2c, PCA9685_I2C_READ_ADDR, Register, 1, &tmp, 1, PCA9685_I2C_TIMEOUT ) )
 	{
 		return PCA9685_ERROR;
 	}
 	tmp &= ~((1<<PCA9685_MODE1_RESTART_BIT)|(1<<Bit));
 	tmp |= (Value&1)<<Bit;
 
-	if( HAL_OK != HAL_I2C_Mem_Write(pca9685_i2c, PCA9685_I2C_WRITE_ADDR, Register, 1, &tmp, 1, HAL_MAX_DELAY ) )
+	if( HAL_OK != HAL_I2C_Mem_Write(pca9685_i2c, PCA9685_I2C_WRITE_ADDR, Register, 1, &tmp, 1, PCA9685_I2C_TIMEOUT ) )
 	{
 		return PCA9685_ERROR;
 	}
@@ -47,7 +47,7 @@ PCA9685_STATUS PCA9685_SoftwareReset(void)
 {
 	uint8_t reset_command = 0x06; // Comando de reinicio por software
 
-	if( HAL_OK != HAL_I2C_Master_Transmit( pca9685_i2c, PCA9685_GENERAL_CALL_ADDRESS, &reset_command, 1, HAL_MAX_DELAY ) )
+	if( HAL_OK != HAL_I2C_Master_Transmit( pca9685_i2c, PCA9685_GENERAL_CALL_ADDRESS, &reset_command, 1, PCA9685_I2C_TIMEOUT ) )
 	{
 		return PCA9685_ERROR;
 	}
@@ -107,25 +107,33 @@ PCA9685_STATUS PCA9685_SetPwmFrequency(uint16_t Frequency)
 		Prescale = floor(PrescalerVal + 0.5);
 	}
 
-	//
-	//	To change the frequency, PCA9685 have to be in Sleep mode.
-	//
-	if ( PCA9685_ERROR == PCA9685_SleepMode(1) )
+	uint8_t old_mode;
+
+	if( PCA9685_OK != PCA9685_ReadRegister( PCA9685_MODE1, &old_mode ) ) // 1 read old_mode
 	{
 		return PCA9685_ERROR;
 	}
 
-	if ( HAL_OK != HAL_I2C_Mem_Write(pca9685_i2c, PCA9685_I2C_WRITE_ADDR, PCA9685_PRESCALE, 1, &Prescale, 1, 10) ) // Write Prescale value
+  	uint8_t new_mode = ( old_mode & 0x7F ) | 0x10; // sleep //2
+
+	if( PCA9685_OK != PCA9685_WriteReg( PCA9685_MODE1, new_mode ) ) // 3 go to sleep
 	{
 		return PCA9685_ERROR;
 	}
 
-	if ( PCA9685_ERROR == PCA9685_SleepMode(0) )
+	if( PCA9685_OK != PCA9685_WriteReg( PCA9685_PRESCALE, Prescale ) ) // 4 Set prescale
 	{
 		return PCA9685_ERROR;
 	}
 
-	if ( PCA9685_ERROR == PCA9685_RestartMode(1) )
+	if( PCA9685_OK != PCA9685_WriteReg( PCA9685_MODE1, old_mode ) ) // 5
+	{
+		return PCA9685_ERROR;
+	}
+
+	osDelay(10);
+
+	if( PCA9685_OK != PCA9685_WriteReg( PCA9685_MODE1, old_mode | 0xA0 ) ) //6 //  This sets the MODE1 register to turn on auto increment.
 	{
 		return PCA9685_ERROR;
 	}
@@ -144,7 +152,7 @@ PCA9685_STATUS PCA9685_SetPwm(uint8_t Channel, uint16_t OnTime, uint16_t OffTime
 	Message[2] = OffTime & 0xFF;
 	Message[3] = OffTime>>8;
 
-	if(HAL_OK != HAL_I2C_Mem_Write(pca9685_i2c, PCA9685_I2C_WRITE_ADDR, RegisterAddress, 1, Message, 4, 10))
+	if(HAL_OK != HAL_I2C_Mem_Write(pca9685_i2c, PCA9685_I2C_WRITE_ADDR, RegisterAddress, 1, Message, 4, PCA9685_I2C_TIMEOUT ))
 	{
 		return PCA9685_ERROR;
 	}
@@ -208,20 +216,19 @@ PCA9685_STATUS PCA9685_Init(I2C_HandleTypeDef *hi2c)
 		return PCA9685_ERROR;
 	}
 
-	//if( HAL_OK != HAL_I2C_Mem_Write(pca9685_i2c, PCA9685_ADDRESS, PCA9685_MODE1, 1, &mode_1_std_op, 1, HAL_MAX_DELAY ) )
 	if ( PCA9685_OK != PCA9685_WriteReg( PCA9685_MODE1, mode_1_std_op  ) )
 	{
         return PCA9685_ERROR;
 	}
     
     // Configurar el registro MODE2
-    if ( PCA9685_OK != PCA9685_WriteReg( PCA9685_MODE2, mode_2_std_op  ) )// PCA9685_ERROR == PCA9685_WriteReg(PCA9685_MODE2, 0x04 )) 
+    if ( PCA9685_OK != PCA9685_WriteReg( PCA9685_MODE2, mode_2_std_op  ) )
 	{
-        return PCA9685_ERROR;
+        return PCA9685_ERROR; 
     }
 
 #ifdef PCA9685_SERVO_MODE
-	if ( PCA9685_ERROR == PCA9685_SetPwmFrequency(FREQUENCY) )
+	if ( PCA9685_ERROR == PCA9685_SetPwmFrequency( FREQUENCY ) )
 #else
 	if ( PCA9685_ERROR == PCA9685_SetPwmFrequency(1000) )
 #endif
@@ -243,12 +250,24 @@ PCA9685_STATUS PCA9685_WriteReg(uint8_t reg, uint8_t value)
 {
     uint8_t data[2] = {reg, value};
 
-    if ( HAL_OK != HAL_I2C_Master_Transmit( pca9685_i2c, PCA9685_I2C_WRITE_ADDR, data, 2, HAL_MAX_DELAY ) ) 
+    if ( HAL_OK != HAL_I2C_Master_Transmit( pca9685_i2c, PCA9685_I2C_WRITE_ADDR, data, 2, PCA9685_I2C_TIMEOUT ) ) 
 	{
-       // printf( "Error en I2C_Master_Transmit \n" );
-
 		return PCA9685_ERROR;
     }
 
     return PCA9685_OK;
+}
+
+PCA9685_STATUS PCA9685_ReadRegister(uint8_t reg, uint8_t *pdata)
+{
+    // Primero, enviamos el registro que queremos leer
+    if ( HAL_OK != HAL_I2C_Master_Transmit(pca9685_i2c, PCA9685_I2C_WRITE_ADDR , &reg, 1, PCA9685_I2C_TIMEOUT) )
+    {
+		return PCA9685_ERROR;
+	}
+    
+    //return HAL_I2C_Mem_Read(pca9685_i2c, PCA9685_I2C_ADDR << 1, reg, I2C_MEMADD_SIZE_8BIT, data, 1, I2C_TIMEOUT);
+
+    // Luego, leemos el dato de ese registro
+    return HAL_I2C_Master_Receive(pca9685_i2c, PCA9685_I2C_READ_ADDR, pdata, 1, PCA9685_I2C_TIMEOUT);
 }
