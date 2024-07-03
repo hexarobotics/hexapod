@@ -346,59 +346,25 @@ static void MX_GPIO_Init(void)
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
+
+    huart2.
+
     /* Infinite loop */
     for(;;)
-    {
-        static int16_t mal = 0;
-        static int16_t bien = 0;
+    {   
+        static const buff_size = 1;
+        uint8_t buffer[buff_size] = { 0 };
+        //leer_comando
+        HAL_UART_Receive_IT( &huart2, &buffer, buff_size);
+
+        //incrementar o decrementar angulo
+
+        //escribir angulo ( canal, angulo )
+
+        //printear valores
 
 
-    	for ( uint16_t channel = 14; channel < 16; channel++ )
-    	{
-			for (uint16_t on_ticks = SERVO_MIN_TICKS; on_ticks < SERVO_MAX_TICKS; on_ticks+=20)
-			{
-                //bool ret = pca9685_set_channel_pwm_times( &handle_pca9685, channel, on_ticks,0 );
-                PCA9685_STATUS ret = PCA9685_SetServoAngle( channel, on_ticks );
-
-                if ( ret == PCA9685_ERROR )
-                {
-                  mal++;
-                }
-                else
-                {
-                	bien++;
-                }
-
-                printf("Bien...: %d, Mal...: %d \n",bien,mal);
-
-                osDelay(100);
-        	}
-        }
-        osDelay(1000);
-
-    	for ( uint16_t channel = 14; channel < 16; channel++ )
-    	{
-			for (uint16_t on_ticks = SERVO_MAX_TICKS; on_ticks > SERVO_MIN_TICKS; on_ticks-=20)
-			{
-                PCA9685_STATUS ret = PCA9685_SetServoAngle( channel, on_ticks );
-
-                if ( ret == PCA9685_ERROR )
-                {
-                  mal++;
-                }
-                else
-                {
-                	bien++;
-                }
-
-                printf("Bien...: %d, Mal...: %d \n",bien,mal);
-
-                osDelay(100);
-        	}
-
-        }
-        osDelay(1000);
-  }
+    }
   /* USER CODE END 5 */
 }
 
