@@ -39,6 +39,10 @@
 #define SERVO_MIN_TICKS         102 // ancho de pulso en ticks para pocicion 0°
 #define SERVO_MAX_TICKS         512 // ancho de pulso en ticks para la pocicion 180°
 
+
+#define UART_RX_DATA_EVENT_FLAG                         0x0001UL
+#define UART_RX_ERROR_EVENT_FLAG                        0x0002UL
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -333,7 +337,14 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    /* Prevent unused argument(s) compilation warning */
+    if ( huart == &huart2 )
+    {
+        osThreadFlagsSet (defaultTaskHandle, UART_RX_DATA_EVENT_FLAG);
+    }
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -347,15 +358,50 @@ void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
 
-    huart2.
-
     /* Infinite loop */
     for(;;)
     {   
-        static const buff_size = 1;
-        uint8_t buffer[buff_size] = { 0 };
+        static const uint8_t buff_size = 1;
+        uint8_t buffer[buff_size];
+        uint32_t evt = osFlagsError;
+        static int32_t angulo = 0;
+
         //leer_comando
-        HAL_UART_Receive_IT( &huart2, &buffer, buff_size);
+        HAL_UART_Receive_IT( &huart2, buffer, buff_size);
+
+        osThreadFlagsClear( UART_RX_DATA_EVENT_FLAG | UART_RX_ERROR_EVENT_FLAG );
+
+        evt = osThreadFlagsWait( UART_RX_DATA_EVENT_FLAG | UART_RX_ERROR_EVENT_FLAG,
+                          osFlagsWaitAny,
+                          100000 ); //100sec
+
+        if ( evt == UART_RX_DATA_EVENT_FLAG )
+        {
+            if ( buffer[0] == 'd' )
+            {
+                angulo +=10;
+            }
+            else if ( buffer[0] == 'a' )
+            {
+                angulo -=10;
+            }
+
+            printf("angulo actual: %ld \n",angulo);
+
+            if ( PCA9685_OK != PCA9685_SetServoAngle( 15, (float)angulo ) )
+            {
+                printf("PCA write angle ERROR");
+            }
+        }
+        else if ( evt == osFlagsErrorTimeout )//UART_RX_ERROR_EVENT_FLAG
+        {
+            printf("uart timeout");
+        }
+        else //ERROR
+        {
+            printf("uart error reception ");
+        }
+
 
         //incrementar o decrementar angulo
 
