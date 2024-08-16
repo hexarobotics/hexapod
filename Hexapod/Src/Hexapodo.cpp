@@ -814,7 +814,7 @@ void gaitSelect(gait GaitType)  //ripple_6, ripple_12,	ripple_24,	wave_12,	wave_
  * @details
  *                            Distancia recorrida (mm)
  *	 Veloc_max =   ----------------------------------------------
- *                      (trantime(s) / conv_to__ms) * pushsteps
+ *                      (trantime(ms) / conv_ms_to_s) * pushsteps
  */
 void calculo_recorrido ()
 {
