@@ -13,4 +13,3 @@ Debug/
 *.map
 
 # Archivo de configuración de STM32CubeIDE
-*.ioc
