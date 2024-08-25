@@ -25,6 +25,9 @@
 #include "stdio.h"
 #include "stdbool.h"
 #include "pca9685.h"
+
+#include "../../Hex/Inc/hex.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

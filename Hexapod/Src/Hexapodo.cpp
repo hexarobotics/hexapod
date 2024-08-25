@@ -224,11 +224,11 @@ ik_req_t bodyIK(uint8_t leg ){//, float Zrot){
 																																/*Calculamos el total en X Y e Z
 																																    DZ_COXA = 0;	la DZ_COXA ES * 0 * SIEMPRE*/
     float Calf = cos (bodyRotX);  				 int TraslacionX_;				int totalX =   Posicion_coxa[leg].x + endpoints[leg].x; 	//distancia X total inicial
-    float Salf = sin (bodyRotX);	 				 int TraslacionY_;			    int totalY =   Posicion_coxa[leg].y + endpoints[leg].y; 	//distancia Y total inicial
+    float Salf = sin (bodyRotX);	 			 int TraslacionY_;			    int totalY =   Posicion_coxa[leg].y + endpoints[leg].y; 	//distancia Y total inicial
     float Cphi = cos (bodyRotY);	     		 int TraslacionZ_;			    int totalZ =   endpoints[leg].z;			//distancia Z total inicial
     float Sphi = sin (bodyRotY);   				 int VectorX_;						uint8_t  DZ_COXA=0;
     float Cthe = cos (bodyRotZ); 	   			 int VectorZ_;
-    float Sthe = sin (bodyRotZ);					 int VectorY_;
+    float Sthe = sin (bodyRotZ);				 int VectorY_;
     //por DEFECTO bodyrotZ es
     //la rotacion del CUERPO
 
@@ -251,7 +251,7 @@ ik_req_t bodyIK(uint8_t leg ){//, float Zrot){
     	VectorZ_ = 0;
     }
 
-    //	MATRIZ DE TRANSFORMACION HOMOG�NEA ****	(ROTACION Y TRASLACION)		****
+    //	MATRIZ DE TRANSFORMACION HOMOGÉNEA ****	(ROTACION Y TRASLACION)		****
     resultado.x = TraslacionX_+int( Cthe*Cphi*VectorX_ + ( -Calf*Sthe+Cthe*Salf*Sphi )*VectorY_ + (Salf*Sthe+Calf*Cthe*Sphi )*VectorZ_);
     resultado.y = TraslacionY_+int( Cphi*Sthe*VectorX_ + (Calf*Cthe+Salf*Sthe*Sphi )*VectorY_ + (-Cthe*Salf+Calf*Sthe*Sphi )*VectorZ_) ;
     resultado.z = TraslacionZ_+int( -Sphi*VectorX_ + Cthe*Salf*VectorY_ + Calf*Cphi*VectorZ_) ;
